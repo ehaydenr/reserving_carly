@@ -1,0 +1,106 @@
+ <!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdn.firebase.com/js/client/1.0.11/firebase.js"></script>
+<link href='fc/fullcalendar.css' rel='stylesheet' />
+<link href='fc/fullcalendar.print.css' rel='stylesheet' media='print' />
+<script src='fc/lib/moment.min.js'></script>
+<script src='fc/lib/jquery.min.js'></script>
+<script src='fc/lib/jquery-ui.custom.min.js'></script>
+<script src='fc/fullcalendar.min.js'></script>
+<script>
+
+	$(document).ready(function() {
+		
+		var dataRef = new Firebase('https://blinding-fire-769.firebaseio.com/');
+		$('#calendar').fullCalendar({
+			header: {
+				left: 'prev,next today',
+				center: 'title',
+				right: 'month,agendaWeek,agendaDay'
+			},
+			defaultDate: '2014-06-12',
+			selectable: true,
+			selectHelper: true,
+			eventClick: function(calEvent, jsEvent, view){
+	if(confirm("Delete Event: " + calEvent.title + "?") == true){
+reference = calEvent.ref;
+var childRef = dataRef.child(reference);
+childRef.remove();
+}
+},
+			select: function(start, end) {
+				var title = prompt('Event Title:');
+				var eventData;
+				if (title) {
+					eventData = {
+						id: title + start + end,
+						title: title,
+						start: start,
+						end: end
+					};
+					firebase_eventData = {
+						id: eventData.id,
+						title: title,
+						start: start.format(),
+						end: end.format()
+					};
+					var ref = dataRef.push(firebase_eventData);	
+console.log(ref.name());
+eventData['ref'] = ref.name();
+					//$('#calendar').fullCalendar('renderEvent', eventData, true); // stick? = true
+				}
+				$('#calendar').fullCalendar('unselect');
+			},
+			editable: false,
+			events: []
+		});
+		
+	});
+
+</script>
+<script>
+$(document).ready(function(){
+	var dataRef = new Firebase('https://blinding-fire-769.firebaseio.com/');
+	dataRef.on('child_added', function (data){
+		var entry = data.val();
+		refName = data.ref().name();
+		entry['ref'] = refName;
+		$('#calendar').fullCalendar('renderEvent', entry, true);
+	});
+	dataRef.on('child_removed', function (data){
+		var entry = data.val();
+		$('#calendar').fullCalendar('removeEvents', entry.id);
+	});
+});
+</script>
+<style>
+
+	body {
+		margin: 0;
+		padding: 0;
+		font-family: "Lucida Grande",Helvetica,Arial,Verdana,sans-serif;
+		font-size: 14px;
+	}
+
+	#calendar {
+		width: 900px;
+		margin: 40px auto;
+	}
+
+	.header {
+		font-size: 32px;
+		background-color: #000000;
+		color: #FFFFFF;
+		text-align: center;
+	}
+
+</style>
+</head>
+<body>
+<div class="header">
+Carly Reservation System
+</div>
+<div id="calendar"></div>
+</body>
+</html>
